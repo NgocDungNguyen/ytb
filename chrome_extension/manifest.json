@@ -1,12 +1,14 @@
 {
   "manifest_version": 3,
   "name": "YTB - Premium Downloader",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Download YouTube videos and audio directly from your browser",
   "permissions": [
     "activeTab",
     "scripting",
-    "storage"
+    "storage",
+    "notifications",
+    "downloads"
   ],
   "host_permissions": [
     "http://localhost:5000/*",

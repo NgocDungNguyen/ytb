@@ -230,20 +230,52 @@ document.addEventListener('DOMContentLoaded', async () => {
             progressFill.style.width = "100%";
             progressPercent.textContent = "100%";
             
-            // Trigger browser download of the file
+            // Trigger browser download with "Save As" dialog
             if (taskId) {
                 const downloadUrl = `${SERVER_URL}/download-file/${taskId}`;
-                chrome.tabs.create({ url: downloadUrl, active: false });
+                
+                // Use Chrome downloads API - lets user choose location!
+                chrome.downloads.download({
+                    url: downloadUrl,
+                    saveAs: true  // This opens "Save As" dialog!
+                }, (downloadId) => {
+                    if (downloadId) {
+                        console.log('Download started with ID:', downloadId);
+                    }
+                });
             }
             
-            showMessage("Download starting...", "success");
+            // Show browser notification
+            showNotification("Download Complete! 🎉", "Your file is ready. Check your downloads!");
+            
+            showMessage("Choose where to save your file!", "success");
             setTimeout(() => {
                 progressContainer.classList.add('hidden');
                 messageArea.textContent = "";
             }, 5000);
         } else {
+            showNotification("Download Failed ❌", errorMsg);
             showMessage(`Error: ${errorMsg}`, "error");
             progressContainer.classList.add('hidden');
+        }
+    }
+
+    function showNotification(title, message) {
+        // Request notification permission and show
+        if (Notification.permission === "granted") {
+            new Notification(title, {
+                body: message,
+                icon: "icon.jpg"
+            });
+        } else if (Notification.permission !== "denied") {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    new Notification(title, {
+                        body: message,
+                        icon: "icon.jpg"
+                    });
+                }
+            });
         }
     }
 
