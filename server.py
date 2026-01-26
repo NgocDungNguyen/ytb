@@ -41,7 +41,7 @@ _cookie_warning_shown = False
 def get_base_ydl_opts():
     """Get base yt-dlp options without browser cookies to avoid locking issues"""
     global _cookie_warning_shown
-    
+
     opts = {
         "quiet": True,
         "no_warnings": True,
@@ -68,8 +68,12 @@ def get_base_ydl_opts():
     else:
         # Only show warning once, not on every request
         if not _cookie_warning_shown:
-            print(f"⚠ No cookies.txt found. Some videos may be rate-limited (429 errors).")
-            print(f"  To fix: Export cookies.txt to {os.path.dirname(os.path.abspath(__file__))}")
+            print(
+                f"⚠ No cookies.txt found. Some videos may be rate-limited (429 errors)."
+            )
+            print(
+                f"  To fix: Export cookies.txt to {os.path.dirname(os.path.abspath(__file__))}"
+            )
             print(f"  (This warning will only show once)")
             _cookie_warning_shown = True
 
