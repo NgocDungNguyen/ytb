@@ -242,6 +242,12 @@ def start_download():
     audio_quality = data.get("audioQuality", "192")  # Default 192 kbps
     cookies = data.get("cookies")  # Cookies from Chrome extension
 
+    # Debug: Check if cookies received
+    if cookies:
+        print(f"✓ Received {len(cookies.split(chr(10)))} cookies from extension")
+    else:
+        print("⚠ No cookies received from extension")
+
     if not url:
         return jsonify({"error": "No URL"}), 400
 
