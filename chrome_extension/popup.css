@@ -47,6 +47,51 @@ h1 {
 .status-badge.online { color: var(--success); background: rgba(78, 255, 136, 0.1); }
 .status-badge.offline { color: var(--danger); background: rgba(255, 75, 75, 0.1); }
 
+/* URL Input Section */
+.url-input-section {
+    margin-bottom: 16px;
+}
+.url-input-section label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 6px;
+}
+.url-input-row {
+    display: flex;
+    gap: 8px;
+}
+#url-input {
+    flex: 1;
+    padding: 8px 10px;
+    background: var(--card-bg);
+    border: 1px solid var(--surface);
+    color: white;
+    border-radius: 6px;
+    font-size: 12px;
+    outline: none;
+}
+#url-input:focus {
+    border-color: var(--accent);
+}
+#url-input::placeholder {
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+.btn.small {
+    padding: 8px 12px;
+    font-size: 11px;
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.btn.small:hover {
+    background: var(--accent-hover);
+}
+
 .video-card {
     background: var(--card-bg);
     border-radius: 12px;

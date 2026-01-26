@@ -8,10 +8,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const progressStatus = document.getElementById('progress-status');
     const progressSpeed = document.getElementById('progress-speed');
     const progressEta = document.getElementById('progress-eta');
+    const urlInput = document.getElementById('url-input');
+    const loadUrlBtn = document.getElementById('load-url-btn');
 
     let isDownloading = false;
     let serverOnline = false;
     let SERVER_URL = null;
+    let currentVideoUrl = null;  // Track the current video URL
 
     // 1. Auto-detect server (localhost or production)
     statusBadge.textContent = "Detecting...";
@@ -20,30 +23,76 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. Check Server Status
     await checkServer();
 
-    // 3. Get Current Tab
+    // 3. Get Current Tab and check if it's a YouTube page
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
     if (!serverOnline) {
         showMessage("Server offline. Make sure the server is running.", "error");
-    } else if (tab && tab.url && (tab.url.includes('youtube.com/watch') || tab.url.includes('youtu.be/'))) {
-        // 4. Check for existing persisted task
+    } else if (tab && tab.url && isValidYouTubeUrl(tab.url)) {
+        // Auto-fill URL from current tab
+        urlInput.value = tab.url;
+        currentVideoUrl = tab.url;
+        
+        // Check for existing persisted task
         const restored = await tryRestoreState(tab.url);
         
         // If not downloading, load info
         if (!restored) {
             loadVideoInfo(tab.url);
-        } else {
-             // We are restoring, so just load video info in background/silently to update UI if needed
-             // But usually restoration sets the UI.
         }
     } else {
-        showMessage("Please open a valid YouTube video page", "error");
+        // Not on YouTube - show input field message
+        showMessage("Paste a YouTube URL above, or open a YouTube video", "normal");
+        controls.classList.remove('disabled');  // Enable controls for manual URL
     }
 
     // Event Listeners
     document.getElementById('download-video').addEventListener('click', () => startDownload('video'));
     document.getElementById('download-audio').addEventListener('click', () => startDownload('audio'));
     document.getElementById('download-transcript').addEventListener('click', () => startDownload('transcript'));
+    
+    // Manual URL Load button
+    loadUrlBtn.addEventListener('click', () => loadManualUrl());
+    
+    // Also load on Enter key in input
+    urlInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') loadManualUrl();
+    });
+
+    // Function to validate YouTube URLs (including Shorts!)
+    function isValidYouTubeUrl(url) {
+        if (!url) return false;
+        return (
+            url.includes('youtube.com/watch') ||
+            url.includes('youtube.com/shorts/') ||  // YouTube Shorts
+            url.includes('youtu.be/') ||
+            url.includes('youtube.com/v/') ||
+            url.includes('youtube.com/embed/')
+        );
+    }
+
+    // Load video from manual URL input
+    async function loadManualUrl() {
+        const url = urlInput.value.trim();
+        
+        if (!url) {
+            showMessage("Please enter a YouTube URL", "error");
+            return;
+        }
+        
+        if (!isValidYouTubeUrl(url)) {
+            showMessage("Invalid YouTube URL. Supported: videos, shorts, youtu.be links", "error");
+            return;
+        }
+        
+        if (!serverOnline) {
+            showMessage("Server is offline", "error");
+            return;
+        }
+        
+        currentVideoUrl = url;
+        loadVideoInfo(url);
+    }
 
     async function checkServer() {
         try {
@@ -134,7 +183,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function startDownload(type) {
         if (isDownloading) return;
         
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        // Use manual URL if entered, otherwise use detected URL
+        const urlToDownload = urlInput.value.trim() || currentVideoUrl;
+        
+        if (!urlToDownload) {
+            showMessage("Please enter or load a YouTube URL first", "error");
+            return;
+        }
+        
+        if (!isValidYouTubeUrl(urlToDownload)) {
+            showMessage("Invalid YouTube URL", "error");
+            return;
+        }
+        
         const quality = document.getElementById('quality-select').value;
         const audioQuality = document.getElementById('audio-quality-select').value;
         
@@ -148,7 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    url: tab.url,
+                    url: urlToDownload,
                     type,
                     quality,
                     audioQuality
@@ -162,7 +223,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await chrome.storage.local.set({
                     currentDownload: {
                         taskId: data.task_id,
-                        url: tab.url,
+                        url: urlToDownload,
                         type: type
                     }
                 });
