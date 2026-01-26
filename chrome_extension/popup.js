@@ -242,22 +242,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         const quality = document.getElementById('quality-select').value;
         const audioQuality = document.getElementById('audio-quality-select').value;
         
+        // Refresh cookies right before download
+        youtubeCookies = await getYouTubeCookies();
+        console.log("Cookies to send:", youtubeCookies ? `${youtubeCookies.split('\n').length} lines` : "NONE");
+        
         try {
             isDownloading = true;
             controls.classList.add('disabled');
             progressContainer.classList.remove('hidden');
             resetProgress();
 
+            const requestBody = { 
+                url: urlToDownload,
+                type,
+                quality,
+                audioQuality,
+                cookies: youtubeCookies  // Send cookies for anti-429 protection
+            };
+            console.log("Sending request with cookies:", !!youtubeCookies);
+
             const response = await fetch(`${SERVER_URL}/download`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    url: urlToDownload,
-                    type,
-                    quality,
-                    audioQuality,
-                    cookies: youtubeCookies  // Send cookies for anti-429 protection
-                })
+                body: JSON.stringify(requestBody)
             });
 
             const data = await response.json();
