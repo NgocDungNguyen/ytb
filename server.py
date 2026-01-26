@@ -130,17 +130,14 @@ def run_download(
         ydl_opts["progress_hooks"] = [lambda d: progress_hook(d, task_id)]
 
         if format_choice == "video":
-            height = quality.replace("p", "")
-            # More flexible format: try preferred height, fallback to best available
-            ydl_opts["format"] = (
-                f"bestvideo[height<={height}]+bestaudio/bestvideo+bestaudio/best"
-            )
+            # Simple format that always works - just get best quality available
+            ydl_opts["format"] = "best"
             # Merge video+audio into single file
             ydl_opts["merge_output_format"] = "mp4"
 
         elif format_choice == "audio":
-            # More flexible: try bestaudio, fallback to best
-            ydl_opts["format"] = "bestaudio/best"
+            # Simple format - get best and extract audio
+            ydl_opts["format"] = "best"
             ydl_opts["postprocessors"] = [
                 {
                     "key": "FFmpegExtractAudio",
