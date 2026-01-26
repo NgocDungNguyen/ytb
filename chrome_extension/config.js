@@ -17,7 +17,7 @@ const CONFIG = {
     SERVER_URL: null,
     
     // Version for tracking
-    VERSION: '1.1',
+    VERSION: '1.3',
     
     // Polling interval for download progress (ms)
     POLL_INTERVAL: 1000,

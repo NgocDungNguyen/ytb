@@ -5,14 +5,9 @@
 services:
   - type: web
     name: ytb-server
-    runtime: python
-    buildCommand: |
-      pip install -r requirements.txt
-      apt-get update && apt-get install -y ffmpeg
-    startCommand: gunicorn server:app --bind 0.0.0.0:$PORT --workers 2 --threads 4
+    runtime: docker
+    dockerfilePath: ./Dockerfile
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.0
       - key: RENDER
         value: true
     healthCheckPath: /health
