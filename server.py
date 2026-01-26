@@ -130,14 +130,12 @@ def run_download(
         ydl_opts["progress_hooks"] = [lambda d: progress_hook(d, task_id)]
 
         if format_choice == "video":
-            # Simple format that always works - just get best quality available
-            ydl_opts["format"] = "best"
-            # Merge video+audio into single file
-            ydl_opts["merge_output_format"] = "mp4"
+            # Don't specify format - let yt-dlp pick the best automatically
+            # This is the most reliable approach
+            pass  # Use default (best available)
 
         elif format_choice == "audio":
-            # Simple format - get best and extract audio
-            ydl_opts["format"] = "best"
+            # Don't specify format - download best and extract audio
             ydl_opts["postprocessors"] = [
                 {
                     "key": "FFmpegExtractAudio",
