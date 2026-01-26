@@ -131,11 +131,15 @@ def run_download(
 
         if format_choice == "video":
             height = quality.replace("p", "")
+            # More flexible format: try preferred height, fallback to best available
             ydl_opts["format"] = (
-                f"bestvideo[height<={height}]+bestaudio/best[height<={height}]"
+                f"bestvideo[height<={height}]+bestaudio/bestvideo+bestaudio/best"
             )
+            # Merge video+audio into single file
+            ydl_opts["merge_output_format"] = "mp4"
 
         elif format_choice == "audio":
+            # More flexible: try bestaudio, fallback to best
             ydl_opts["format"] = "bestaudio/best"
             ydl_opts["postprocessors"] = [
                 {
