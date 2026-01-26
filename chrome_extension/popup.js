@@ -287,29 +287,65 @@ document.addEventListener('DOMContentLoaded', async () => {
         await chrome.storage.local.remove('currentDownload');
 
         if (success) {
-            progressStatus.textContent = "Completed!";
+            progressStatus.textContent = "Preparing file...";
             progressFill.style.width = "100%";
             progressPercent.textContent = "100%";
             
-            // Trigger browser download with "Save As" dialog
+            // Download file as blob to bypass IDM interception
             if (taskId) {
-                const downloadUrl = `${SERVER_URL}/download-file/${taskId}`;
-                
-                // Use Chrome downloads API - lets user choose location!
-                chrome.downloads.download({
-                    url: downloadUrl,
-                    saveAs: true  // This opens "Save As" dialog!
-                }, (downloadId) => {
-                    if (downloadId) {
-                        console.log('Download started with ID:', downloadId);
+                try {
+                    progressStatus.textContent = "Fetching file...";
+                    
+                    const downloadUrl = `${SERVER_URL}/download-file/${taskId}`;
+                    const response = await fetch(downloadUrl);
+                    
+                    if (!response.ok) throw new Error('Failed to fetch file');
+                    
+                    // Get filename from Content-Disposition header or generate one
+                    const contentDisposition = response.headers.get('Content-Disposition');
+                    let filename = 'download';
+                    if (contentDisposition) {
+                        const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                        if (match && match[1]) {
+                            filename = match[1].replace(/['"]/g, '');
+                        }
                     }
-                });
+                    
+                    // Convert to blob
+                    const blob = await response.blob();
+                    
+                    // Create blob URL and trigger download
+                    const blobUrl = URL.createObjectURL(blob);
+                    
+                    // Use Chrome downloads API with blob URL - IDM can't intercept this!
+                    chrome.downloads.download({
+                        url: blobUrl,
+                        filename: filename,
+                        saveAs: true
+                    }, (downloadId) => {
+                        if (downloadId) {
+                            console.log('Download started with ID:', downloadId);
+                            // Clean up blob URL after a delay
+                            setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+                        } else {
+                            // Fallback: open blob in new tab
+                            const a = document.createElement('a');
+                            a.href = blobUrl;
+                            a.download = filename;
+                            a.click();
+                        }
+                    });
+                    
+                    progressStatus.textContent = "Completed!";
+                    showNotification("Download Complete! 🎉", "Your file is ready!");
+                    showMessage("Save dialog should appear now!", "success");
+                    
+                } catch (fetchError) {
+                    console.error('Blob download failed:', fetchError);
+                    showMessage("Download prepared. Check your downloads folder.", "success");
+                }
             }
             
-            // Show browser notification
-            showNotification("Download Complete! 🎉", "Your file is ready. Check your downloads!");
-            
-            showMessage("Choose where to save your file!", "success");
             setTimeout(() => {
                 progressContainer.classList.add('hidden');
                 messageArea.textContent = "";
