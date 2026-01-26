@@ -1,19 +1,20 @@
 // ============================================
 // YTB Extension Configuration
 // ============================================
-// IMPORTANT: Update SERVER_URL before publishing to Chrome Web Store!
-// 
-// For LOCAL development (testing on your PC):
-//   const SERVER_URL = 'http://localhost:5000';
-//
-// For PRODUCTION (after deploying to Render):
-//   const SERVER_URL = 'https://your-app-name.onrender.com';
+// The extension will automatically detect which server to use:
+// - If localhost:5000 is running → uses local server
+// - If localhost is down → uses Render server
 // ============================================
 
 const CONFIG = {
-    // Change this URL to your Render deployment URL before publishing!
-    // Example: 'https://ytb-server.onrender.com'
-    SERVER_URL: 'https://ytb-wjja.onrender.com',
+    // Local development server
+    LOCAL_URL: 'http://localhost:5000',
+    
+    // Production server (Render)
+    PRODUCTION_URL: 'https://ytb-wjja.onrender.com',
+    
+    // This will be set automatically after detection
+    SERVER_URL: null,
     
     // Version for tracking
     VERSION: '1.1',
@@ -25,5 +26,25 @@ const CONFIG = {
     SUCCESS_MESSAGE_DURATION: 5000
 };
 
-// Export for use in popup.js
-// (In Chrome extensions, we just make it global)
+// Auto-detect which server to use
+async function detectServer() {
+    // Try localhost first (for developers)
+    try {
+        const response = await fetch(`${CONFIG.LOCAL_URL}/health`, {
+            method: 'GET',
+            signal: AbortSignal.timeout(2000) // 2 second timeout
+        });
+        if (response.ok) {
+            CONFIG.SERVER_URL = CONFIG.LOCAL_URL;
+            console.log('✓ Using LOCAL server:', CONFIG.SERVER_URL);
+            return CONFIG.LOCAL_URL;
+        }
+    } catch (e) {
+        // Localhost not available, try production
+    }
+    
+    // Fall back to Render production server
+    CONFIG.SERVER_URL = CONFIG.PRODUCTION_URL;
+    console.log('✓ Using PRODUCTION server:', CONFIG.SERVER_URL);
+    return CONFIG.PRODUCTION_URL;
+}

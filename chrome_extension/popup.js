@@ -11,20 +11,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let isDownloading = false;
     let serverOnline = false;
-    
-    // Use config from config.js
-    const SERVER_URL = CONFIG.SERVER_URL;
+    let SERVER_URL = null;
 
-    // 1. Check Server Status
+    // 1. Auto-detect server (localhost or production)
+    statusBadge.textContent = "Detecting...";
+    SERVER_URL = await detectServer();
+    
+    // 2. Check Server Status
     await checkServer();
 
-    // 2. Get Current Tab
+    // 3. Get Current Tab
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
     if (!serverOnline) {
         showMessage("Server offline. Make sure the server is running.", "error");
     } else if (tab && tab.url && (tab.url.includes('youtube.com/watch') || tab.url.includes('youtu.be/'))) {
-        // 3. Check for existing persisted task
+        // 4. Check for existing persisted task
         const restored = await tryRestoreState(tab.url);
         
         // If not downloading, load info
