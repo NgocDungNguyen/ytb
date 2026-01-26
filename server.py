@@ -242,26 +242,26 @@ def download_file(task_id):
     if filepath and os.path.exists(filepath):
         # Get the filename and determine MIME type
         filename = os.path.basename(filepath)
-        
+
         # Set correct MIME type based on file extension
         ext = os.path.splitext(filepath)[1].lower()
         mime_types = {
-            '.mp4': 'video/mp4',
-            '.webm': 'video/webm',
-            '.mkv': 'video/x-matroska',
-            '.mp3': 'audio/mpeg',
-            '.m4a': 'audio/mp4',
-            '.wav': 'audio/wav',
-            '.vtt': 'text/vtt',
-            '.srt': 'text/plain',
+            ".mp4": "video/mp4",
+            ".webm": "video/webm",
+            ".mkv": "video/x-matroska",
+            ".mp3": "audio/mpeg",
+            ".m4a": "audio/mp4",
+            ".wav": "audio/wav",
+            ".vtt": "text/vtt",
+            ".srt": "text/plain",
         }
-        mimetype = mime_types.get(ext, 'application/octet-stream')
-        
+        mimetype = mime_types.get(ext, "application/octet-stream")
+
         return send_file(
-            filepath, 
+            filepath,
             as_attachment=True,
             download_name=filename,  # Force correct filename
-            mimetype=mimetype  # Force correct MIME type
+            mimetype=mimetype,  # Force correct MIME type
         )
     return jsonify({"error": "File not found"}), 404
 
