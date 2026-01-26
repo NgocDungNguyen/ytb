@@ -59,9 +59,11 @@ def get_base_ydl_opts(cookies_from_extension=None):
 
     # Priority 1: Use cookies sent from Chrome extension (best - auto from browser!)
     if cookies_from_extension:
-        temp_cookie_file = os.path.join(DOWNLOAD_DIR, f"temp_cookies_{uuid.uuid4().hex[:8]}.txt")
+        temp_cookie_file = os.path.join(
+            DOWNLOAD_DIR, f"temp_cookies_{uuid.uuid4().hex[:8]}.txt"
+        )
         try:
-            with open(temp_cookie_file, 'w') as f:
+            with open(temp_cookie_file, "w") as f:
                 f.write("# Netscape HTTP Cookie File\n")
                 f.write(cookies_from_extension)
             opts["cookiefile"] = temp_cookie_file
@@ -85,7 +87,9 @@ def get_base_ydl_opts(cookies_from_extension=None):
     else:
         # No cookies available
         if not _cookie_warning_shown:
-            print("ℹ No cookies available. If you get 429 errors, the extension will auto-send browser cookies.")
+            print(
+                "ℹ No cookies available. If you get 429 errors, the extension will auto-send browser cookies."
+            )
             _cookie_warning_shown = True
 
     return opts
@@ -111,13 +115,17 @@ def progress_hook(d, task_id):
         tasks[task_id].update({"status": "processing", "progress": 100})
 
 
-def run_download(task_id, url, format_choice, quality, audio_quality="192", cookies=None):
+def run_download(
+    task_id, url, format_choice, quality, audio_quality="192", cookies=None
+):
     temp_cookie_file = None
     try:
         tasks[task_id]["status"] = "starting"
 
         ydl_opts = get_base_ydl_opts(cookies)
-        temp_cookie_file = ydl_opts.pop("_temp_cookie_file", None)  # Extract for cleanup
+        temp_cookie_file = ydl_opts.pop(
+            "_temp_cookie_file", None
+        )  # Extract for cleanup
         ydl_opts["outtmpl"] = f"{DOWNLOAD_DIR}/%(title)s.%(ext)s"
         ydl_opts["progress_hooks"] = [lambda d: progress_hook(d, task_id)]
 
@@ -192,7 +200,7 @@ def run_download(task_id, url, format_choice, quality, audio_quality="192", cook
             err_msg = "YouTube is rate-limiting. Please try again in a few minutes."
 
         tasks[task_id].update({"status": "error", "error": err_msg})
-    
+
     finally:
         # Clean up temporary cookie file
         if temp_cookie_file and os.path.exists(temp_cookie_file):
@@ -241,7 +249,8 @@ def start_download():
     tasks[task_id] = {"status": "queued", "progress": 0, "speed": "0", "eta": "--:--"}
 
     thread = threading.Thread(
-        target=run_download, args=(task_id, url, format_choice, quality, audio_quality, cookies)
+        target=run_download,
+        args=(task_id, url, format_choice, quality, audio_quality, cookies),
     )
     thread.start()
 
