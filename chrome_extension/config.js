@@ -13,7 +13,7 @@
 const CONFIG = {
     // Change this URL to your Render deployment URL before publishing!
     // Example: 'https://ytb-server.onrender.com'
-    SERVER_URL: 'http://localhost:5000',
+    SERVER_URL: 'https://ytb-wjja.onrender.com',
     
     // Version for tracking
     VERSION: '1.1',
