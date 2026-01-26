@@ -136,6 +136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         const quality = document.getElementById('quality-select').value;
+        const audioQuality = document.getElementById('audio-quality-select').value;
         
         try {
             isDownloading = true;
@@ -149,7 +150,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify({ 
                     url: tab.url,
                     type,
-                    quality
+                    quality,
+                    audioQuality
                 })
             });
 

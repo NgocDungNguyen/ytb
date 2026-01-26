@@ -30,13 +30,25 @@
             <div class="controls disabled" id="controls">
                 
                 <div class="option-group">
-                    <label>Quality / Format</label>
+                    <label>Video Quality</label>
                     <div class="options-row">
                         <select id="quality-select">
-                            <option value="1080p">1080p</option>
-                            <option value="720p" selected>720p</option>
+                            <option value="1080p">1080p (Full HD)</option>
+                            <option value="720p" selected>720p (HD)</option>
                             <option value="480p">480p</option>
                             <option value="360p">360p</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <label>Audio Quality</label>
+                    <div class="options-row">
+                        <select id="audio-quality-select">
+                            <option value="320">320 kbps (Best)</option>
+                            <option value="256">256 kbps (High)</option>
+                            <option value="192" selected>192 kbps (Good)</option>
+                            <option value="128">128 kbps (Small)</option>
                         </select>
                     </div>
                 </div>

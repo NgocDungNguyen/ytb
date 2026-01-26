@@ -88,7 +88,7 @@ def progress_hook(d, task_id):
         tasks[task_id].update({"status": "processing", "progress": 100})
 
 
-def run_download(task_id, url, format_choice, quality):
+def run_download(task_id, url, format_choice, quality, audio_quality="192"):
     try:
         tasks[task_id]["status"] = "starting"
 
@@ -108,7 +108,7 @@ def run_download(task_id, url, format_choice, quality):
                 {
                     "key": "FFmpegExtractAudio",
                     "preferredcodec": "mp3",
-                    "preferredquality": "192",
+                    "preferredquality": audio_quality,  # User-selected quality
                 }
             ]
 
@@ -187,6 +187,7 @@ def start_download():
     url = data.get("url")
     format_choice = data.get("type", "video")
     quality = data.get("quality", "720p")
+    audio_quality = data.get("audioQuality", "192")  # Default 192 kbps
 
     if not url:
         return jsonify({"error": "No URL"}), 400
@@ -195,7 +196,7 @@ def start_download():
     tasks[task_id] = {"status": "queued", "progress": 0, "speed": "0", "eta": "--:--"}
 
     thread = threading.Thread(
-        target=run_download, args=(task_id, url, format_choice, quality)
+        target=run_download, args=(task_id, url, format_choice, quality, audio_quality)
     )
     thread.start()
 
