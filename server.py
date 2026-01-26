@@ -130,6 +130,9 @@ def run_download(task_id, url, format_choice, quality, audio_quality="192"):
             ydl_opts["skip_download"] = True
             ydl_opts["subtitleslangs"] = ["en", "en-orig"]
             ydl_opts["outtmpl"] = f"{DOWNLOAD_DIR}/%(title)s.%(ext)s"
+            # Ignore subtitle download errors and continue
+            ydl_opts["ignoreerrors"] = True
+            ydl_opts["no_warnings"] = True
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
@@ -146,11 +149,17 @@ def run_download(task_id, url, format_choice, quality, audio_quality="192"):
                 filename = f"{filename} [Subtitles]"
                 # Find the actual subtitle file
                 base_path = os.path.splitext(downloaded_file)[0]
+                subtitle_found = False
                 for ext in [".en.vtt", ".en.srt", ".en-orig.vtt", ".vtt", ".srt"]:
                     potential_file = base_path + ext
                     if os.path.exists(potential_file):
                         downloaded_file = potential_file
+                        subtitle_found = True
                         break
+                
+                # If no subtitle file found, raise a clear error
+                if not subtitle_found:
+                    raise Exception("No subtitles available for this video, or YouTube blocked the request (429 error). Try adding cookies.txt.")
 
             tasks[task_id].update(
                 {
