@@ -38,8 +38,8 @@ tasks = {}
 _cookie_warning_shown = False
 
 
-def get_base_ydl_opts():
-    """Get base yt-dlp options without browser cookies to avoid locking issues"""
+def get_base_ydl_opts(cookies_from_extension=None):
+    """Get base yt-dlp options with automatic cookie handling"""
     global _cookie_warning_shown
 
     opts = {
@@ -57,24 +57,35 @@ def get_base_ydl_opts():
         },
     }
 
-    # Only use cookies.txt if it exists (avoids Chrome DB locking issues)
+    # Priority 1: Use cookies sent from Chrome extension (best - auto from browser!)
+    if cookies_from_extension:
+        temp_cookie_file = os.path.join(DOWNLOAD_DIR, f"temp_cookies_{uuid.uuid4().hex[:8]}.txt")
+        try:
+            with open(temp_cookie_file, 'w') as f:
+                f.write("# Netscape HTTP Cookie File\n")
+                f.write(cookies_from_extension)
+            opts["cookiefile"] = temp_cookie_file
+            opts["_temp_cookie_file"] = temp_cookie_file  # Track for cleanup
+            if not _cookie_warning_shown:
+                print("✓ Using cookies from Chrome extension (auto-authenticated!)")
+                _cookie_warning_shown = True
+            return opts
+        except Exception as e:
+            print(f"⚠ Could not write extension cookies: {e}")
+
+    # Priority 2: Use cookies.txt if it exists
     local_cookies = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "cookies.txt"
     )
     if os.path.exists(local_cookies):
         opts["cookiefile"] = local_cookies
         if not _cookie_warning_shown:
-            print(f"✓ Using cookies.txt for authentication")
+            print("✓ Using cookies.txt for authentication")
+            _cookie_warning_shown = True
     else:
-        # Only show warning once, not on every request
+        # No cookies available
         if not _cookie_warning_shown:
-            print(
-                f"⚠ No cookies.txt found. Some videos may be rate-limited (429 errors)."
-            )
-            print(
-                f"  To fix: Export cookies.txt to {os.path.dirname(os.path.abspath(__file__))}"
-            )
-            print(f"  (This warning will only show once)")
+            print("ℹ No cookies available. If you get 429 errors, the extension will auto-send browser cookies.")
             _cookie_warning_shown = True
 
     return opts
@@ -100,11 +111,13 @@ def progress_hook(d, task_id):
         tasks[task_id].update({"status": "processing", "progress": 100})
 
 
-def run_download(task_id, url, format_choice, quality, audio_quality="192"):
+def run_download(task_id, url, format_choice, quality, audio_quality="192", cookies=None):
+    temp_cookie_file = None
     try:
         tasks[task_id]["status"] = "starting"
 
-        ydl_opts = get_base_ydl_opts()
+        ydl_opts = get_base_ydl_opts(cookies)
+        temp_cookie_file = ydl_opts.pop("_temp_cookie_file", None)  # Extract for cleanup
         ydl_opts["outtmpl"] = f"{DOWNLOAD_DIR}/%(title)s.%(ext)s"
         ydl_opts["progress_hooks"] = [lambda d: progress_hook(d, task_id)]
 
@@ -156,10 +169,12 @@ def run_download(task_id, url, format_choice, quality, audio_quality="192"):
                         downloaded_file = potential_file
                         subtitle_found = True
                         break
-                
+
                 # If no subtitle file found, raise a clear error
                 if not subtitle_found:
-                    raise Exception("No subtitles available for this video, or YouTube blocked the request (429 error). Try adding cookies.txt.")
+                    raise Exception(
+                        "No subtitles available for this video, or YouTube blocked the request (429 error). Try adding cookies.txt."
+                    )
 
             tasks[task_id].update(
                 {
@@ -174,9 +189,17 @@ def run_download(task_id, url, format_choice, quality, audio_quality="192"):
         print(f"Error in task {task_id}: {str(e)}")
         err_msg = str(e)
         if "429" in err_msg or "Too Many Requests" in err_msg:
-            err_msg = "YouTube is blocking requests. Please add cookies.txt to fix this. See walkthrough.md for instructions."
+            err_msg = "YouTube is rate-limiting. Please try again in a few minutes."
 
         tasks[task_id].update({"status": "error", "error": err_msg})
+    
+    finally:
+        # Clean up temporary cookie file
+        if temp_cookie_file and os.path.exists(temp_cookie_file):
+            try:
+                os.remove(temp_cookie_file)
+            except:
+                pass
 
 
 @app.route("/info", methods=["POST"])
@@ -209,6 +232,7 @@ def start_download():
     format_choice = data.get("type", "video")
     quality = data.get("quality", "720p")
     audio_quality = data.get("audioQuality", "192")  # Default 192 kbps
+    cookies = data.get("cookies")  # Cookies from Chrome extension
 
     if not url:
         return jsonify({"error": "No URL"}), 400
@@ -217,7 +241,7 @@ def start_download():
     tasks[task_id] = {"status": "queued", "progress": 0, "speed": "0", "eta": "--:--"}
 
     thread = threading.Thread(
-        target=run_download, args=(task_id, url, format_choice, quality, audio_quality)
+        target=run_download, args=(task_id, url, format_choice, quality, audio_quality, cookies)
     )
     thread.start()
 

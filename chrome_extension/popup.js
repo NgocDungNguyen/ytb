@@ -15,12 +15,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     let serverOnline = false;
     let SERVER_URL = null;
     let currentVideoUrl = null;  // Track the current video URL
+    let youtubeCookies = null;   // Store YouTube cookies for authentication
 
     // 1. Auto-detect server (localhost or production)
     statusBadge.textContent = "Detecting...";
     SERVER_URL = await detectServer();
     
-    // 2. Check Server Status
+    // 2. Extract YouTube cookies (for anti-429 protection)
+    youtubeCookies = await getYouTubeCookies();
+    
+    // 3. Check Server Status
     await checkServer();
 
     // 3. Get Current Tab and check if it's a YouTube page
@@ -92,6 +96,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         currentVideoUrl = url;
         loadVideoInfo(url);
+    }
+
+    // Extract YouTube cookies from browser - auto-authentication!
+    async function getYouTubeCookies() {
+        try {
+            const cookies = await chrome.cookies.getAll({ domain: ".youtube.com" });
+            if (cookies && cookies.length > 0) {
+                // Convert to Netscape cookie format for yt-dlp
+                const cookieLines = cookies.map(c => {
+                    const secure = c.secure ? "TRUE" : "FALSE";
+                    const httpOnly = c.httpOnly ? "TRUE" : "FALSE";
+                    const expiry = c.expirationDate ? Math.floor(c.expirationDate) : 0;
+                    return `${c.domain}\tTRUE\t${c.path}\t${secure}\t${expiry}\t${c.name}\t${c.value}`;
+                });
+                console.log(`✓ Extracted ${cookies.length} YouTube cookies`);
+                return cookieLines.join('\n');
+            }
+        } catch (e) {
+            console.warn("Could not get YouTube cookies:", e);
+        }
+        return null;
     }
 
     async function checkServer() {
@@ -212,7 +237,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     url: urlToDownload,
                     type,
                     quality,
-                    audioQuality
+                    audioQuality,
+                    cookies: youtubeCookies  // Send cookies for anti-429 protection
                 })
             });
 
