@@ -101,20 +101,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Extract YouTube cookies from browser - auto-authentication!
     async function getYouTubeCookies() {
         try {
-            const cookies = await chrome.cookies.getAll({ domain: ".youtube.com" });
-            if (cookies && cookies.length > 0) {
+            // Try multiple domains to get all YouTube cookies
+            const domains = [".youtube.com", "youtube.com", ".google.com"];
+            let allCookies = [];
+            
+            for (const domain of domains) {
+                try {
+                    const cookies = await chrome.cookies.getAll({ domain });
+                    if (cookies && cookies.length > 0) {
+                        allCookies = allCookies.concat(cookies);
+                    }
+                } catch (e) {
+                    console.log(`No cookies for ${domain}`);
+                }
+            }
+            
+            // Remove duplicates by name
+            const uniqueCookies = [...new Map(allCookies.map(c => [c.name, c])).values()];
+            
+            if (uniqueCookies.length > 0) {
                 // Convert to Netscape cookie format for yt-dlp
-                const cookieLines = cookies.map(c => {
+                const cookieLines = uniqueCookies.map(c => {
                     const secure = c.secure ? "TRUE" : "FALSE";
-                    const httpOnly = c.httpOnly ? "TRUE" : "FALSE";
                     const expiry = c.expirationDate ? Math.floor(c.expirationDate) : 0;
                     return `${c.domain}\tTRUE\t${c.path}\t${secure}\t${expiry}\t${c.name}\t${c.value}`;
                 });
-                console.log(`✓ Extracted ${cookies.length} YouTube cookies`);
+                console.log(`✓ Extracted ${uniqueCookies.length} YouTube cookies`);
                 return cookieLines.join('\n');
+            } else {
+                console.warn("No YouTube cookies found - make sure you're logged into YouTube");
             }
         } catch (e) {
-            console.warn("Could not get YouTube cookies:", e);
+            console.error("Could not get YouTube cookies:", e);
         }
         return null;
     }
