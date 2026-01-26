@@ -1,0 +1,5 @@
+# Server dependencies for Render deployment
+flask
+flask-cors
+yt-dlp
+gunicorn

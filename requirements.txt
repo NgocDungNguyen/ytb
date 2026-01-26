@@ -1,0 +1,14 @@
+# Core server dependencies (required for Render)
+flask
+flask-cors
+yt-dlp
+gunicorn
+
+# Desktop app dependencies (optional - for ytb.py)
+customtkinter
+ttkbootstrap
+pygame
+opencv-python
+pillow
+requests
+ffmpeg-python

@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Secrets - DO NOT COMMIT
+cookies.txt
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Downloads
+YTB_Downloads/
+
+# Logs
+*.log
+
+# Distribution
+*.zip
+dist/
+build/

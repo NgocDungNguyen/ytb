@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YTB Downloader</title>
+    <link rel="stylesheet" href="popup.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>YTB Premium</h1>
+            <div class="status-badge" id="server-status">Connecting...</div>
+        </header>
+
+        <main>
+            <!-- Video Info Card -->
+            <div id="video-info" class="video-card hidden">
+                <img id="thumbnail" src="" alt="Video Thumbnail">
+                <div class="video-details">
+                    <h2 id="video-title">Loading...</h2>
+                    <div class="meta">
+                        <span id="video-duration">--:--</span> • <span id="video-views">-- views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls (Selection & Buttons) -->
+            <div class="controls disabled" id="controls">
+                
+                <div class="option-group">
+                    <label>Quality / Format</label>
+                    <div class="options-row">
+                        <select id="quality-select">
+                            <option value="1080p">1080p</option>
+                            <option value="720p" selected>720p</option>
+                            <option value="480p">480p</option>
+                            <option value="360p">360p</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="action-buttons-grid">
+                    <button id="download-video" class="btn primary">
+                        <span>Video (MP4)</span>
+                    </button>
+                    <button id="download-audio" class="btn secondary">
+                        <span>Audio (MP3)</span>
+                    </button>
+                    <button id="download-transcript" class="btn outline">
+                        <span>Transcript</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Section (Initially Hidden) -->
+            <div id="progress-container" class="progress-container hidden">
+                <div class="progress-header">
+                    <span id="progress-status">Downloading...</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="progress-meta">
+                    <span id="progress-speed">0 KiB/s</span>
+                    <span id="progress-eta">ETA: --:--</span>
+                </div>
+            </div>
+
+            <div id="message-area" class="message-area"></div>
+        </main>
+    </div>
+    <script src="config.js"></script>
+    <script src="popup.js"></script>
+</body>
+</html>
