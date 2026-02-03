@@ -131,9 +131,9 @@ def run_download(
         ydl_opts["progress_hooks"] = [lambda d: progress_hook(d, task_id)]
 
         if format_choice == "video":
-            # Don't specify format - let yt-dlp pick the best automatically
-            # This is the most reliable approach
-            pass  # Use default (best available)
+            # Request best video+audio, with fallback to best single file
+            height = quality.replace('p', '')
+            ydl_opts['format'] = f'bestvideo[height<={height}]+bestaudio/best[height<={height}]/best'
 
         elif format_choice == "audio":
             # Don't specify format - download best and extract audio
